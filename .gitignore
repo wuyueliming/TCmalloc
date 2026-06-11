@@ -1,0 +1,31 @@
+# Compiled objects
+*.o
+*.obj
+*.exe
+*.out
+*.app
+
+# Binaries
+01_correctness
+02_single_thread
+03_scalability
+04_stress
+05_latency
+06_fragmentation
+07_endurance
+08_peak_throughput
+09_memory_capacity
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports
+*.md
