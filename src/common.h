@@ -6,8 +6,8 @@
 #include<cstring>
 #include <time.h>
 #include <thread>
-#include <mutex>
 #include <atomic>
+#include "base/Lock.h"
 static const size_t MAX_BYTES = 256 * 1024;
 static const size_t NLISTS = 208;
 static const size_t NPAGES = 129;
@@ -159,8 +159,7 @@ namespace CMP
                 static size_t FetchNumber_obj(size_t size) {
                     assert(size > 0);
                     // [2, 512]，一次批量移动多少个对象的(慢启动)上限值
-                    // 小对象一次批量上限高
-                    // 小对象一次批量上限低
+                    // 小对象一次批量上限高，大对象一次批量上限低
                     int num = MAX_BYTES / size;
                     if (num < 2)
                     num = 2;
@@ -293,11 +292,11 @@ namespace CMP
                     span->_prev = nullptr;
                     span->_next = nullptr;
                 }
-                std::mutex& GetMutex() {
+                Lock& GetMutex() {
                     return _mutex;
                 }
                 private:
                 Span* _Head;
-                std::mutex _mutex;
+                Lock _mutex;
             };
         }

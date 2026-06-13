@@ -1,8 +1,8 @@
-﻿#pragma once
+#pragma once
 #include"common.h"
 namespace CMP
 {
-    class ThreadCache {
+    class alignas(64) ThreadCache {
         public:
         ThreadCache() = default;
         //ThreadCache分配内存

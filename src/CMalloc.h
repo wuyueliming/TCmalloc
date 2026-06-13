@@ -31,6 +31,16 @@ namespace CMP
                 return (void*)(pSpan->_pageId << PAGE_SHIFT);
             }
         }
+        static void Free(void* ptr, size_t size) {
+            if (size <= MAX_BYTES) {
+                assert(pTLSThreadCache != nullptr);
+                pTLSThreadCache->Deallocate(ptr, size);
+            }
+            else {
+                Span* pSpan = PageCache::GetInstance()->IdmapToSpan((PAGE_ID)ptr >> PAGE_SHIFT);
+                if (pSpan) PageCache::GetInstance()->Deallocate(pSpan);
+            }
+        }
         static void Free(void* ptr) {
             Span* retSpan = PageCache::GetInstance()->IdmapToSpan((PAGE_ID)ptr >> PAGE_SHIFT);
             if (retSpan == nullptr)

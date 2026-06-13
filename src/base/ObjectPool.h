@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include"../common.h"
 namespace CMP
 {
@@ -46,6 +46,6 @@ namespace CMP
         void* _memory = nullptr;
         size_t _remainBytes = 0;
         void* _freelist = nullptr;
-        std::mutex _mutex;
+        Lock _mutex;
     };
 }

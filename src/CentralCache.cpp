@@ -57,6 +57,9 @@ namespace CMP
     }
     void CentralCache::RecycleListToSpans(void* freelist,size_t size,size_t num) {
         size_t index = SizeClass::Index(size);
+        Span* spans_to_delete[64];  // 收集需要归还 PageCache 的 Span
+        size_t delete_count = 0;
+
         _SpanLists[index].GetMutex().lock();
         void* next=nullptr;
         for (void* obj = freelist; obj != nullptr; obj = next) {
@@ -69,13 +72,20 @@ namespace CMP
             nextptr(obj) = pSpan->_freeList;
             pSpan->_freeList = obj;
             pSpan->_useCount--;
-            //当前span的内存全部回收了，将span回收给PageCache
+            //当前span的内存全部回收了，将span收集起来，稍后在锁外归还PageCache
             if (pSpan->_useCount == 0) {
                 _SpanLists[index].Erase(pSpan);
-                PageCache::GetInstance()->Deallocate(pSpan);
+                if (delete_count < 64) {
+                    spans_to_delete[delete_count++] = pSpan;
+                }
             }
         }
         _SpanLists[index].GetMutex().unlock();
+
+        // 在 CentralCache 锁外释放 Span，避免锁嵌套
+        for (size_t i = 0; i < delete_count; i++) {
+            PageCache::GetInstance()->Deallocate(spans_to_delete[i]);
+        }
     }
     CentralCache CentralCache::_Instance;
 };

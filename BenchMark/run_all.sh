@@ -53,3 +53,46 @@ echo "================================================================" | tee -a
 echo "  All tests completed. PASSED: $PASSED, FAILED: $FAILED" | tee -a $REPORT
 echo "  Report saved to: $REPORT" | tee -a $REPORT
 echo "================================================================" | tee -a $REPORT
+
+# ==================== Google Benchmarks ====================
+echo "" | tee -a $REPORT
+echo "================================================================" | tee -a $REPORT
+echo "  Google Benchmarks (ported from gperftools)" | tee -a $REPORT
+echo "================================================================" | tee -a $REPORT
+echo "" | tee -a $REPORT
+
+GOOGLE_BENCH_DIR="../GoogleBench"
+
+if [ -d "$GOOGLE_BENCH_DIR" ]; then
+    # Build Google benchmarks
+    echo ">>> Building Google benchmarks..." | tee -a $REPORT
+    (cd "$GOOGLE_BENCH_DIR" && make clean && make) 2>&1 | tee -a $REPORT
+    if [ $? -ne 0 ]; then
+        echo ">>> Google benchmarks build FAILED" | tee -a $REPORT
+    else
+        echo ">>> Google benchmarks build OK" | tee -a $REPORT
+        echo "" | tee -a $REPORT
+
+        # Run malloc_bench
+        if [ -x "$GOOGLE_BENCH_DIR/malloc_bench" ]; then
+            echo ">>> Running malloc_bench..." | tee -a $REPORT
+            echo "---" | tee -a $REPORT
+            drop_caches
+            $GOOGLE_BENCH_DIR/malloc_bench 2>&1 | tee -a $REPORT
+            echo "---" | tee -a $REPORT
+            echo "" | tee -a $REPORT
+        fi
+
+        # Run binary_trees
+        if [ -x "$GOOGLE_BENCH_DIR/binary_trees" ]; then
+            echo ">>> Running binary_trees (depth=18, threads=4)..." | tee -a $REPORT
+            echo "---" | tee -a $REPORT
+            drop_caches
+            $GOOGLE_BENCH_DIR/binary_trees 18 4 2>&1 | tee -a $REPORT
+            echo "---" | tee -a $REPORT
+            echo "" | tee -a $REPORT
+        fi
+    fi
+else
+    echo ">>> SKIP Google benchmarks (directory not found: $GOOGLE_BENCH_DIR)" | tee -a $REPORT
+fi
