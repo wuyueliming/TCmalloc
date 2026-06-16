@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -O2 -pthread -I../src -I../src/base
-GPERF_INCLUDE = -I/home/wuyue/workspace/study/input/[code]project_src/2.TCmalloc/Google_src/build -I/home/wuyue/workspace/study/input/[code]project_src/2.TCmalloc/Google_src/src
-GPERF_LIB = -L/home/wuyue/workspace/study/input/[code]project_src/2.TCmalloc/Google_src/build -ltcmalloc_minimal -Wl,-rpath,/home/wuyue/workspace/study/input/[code]project_src/2.TCmalloc/Google_src/build
+GPERF_INCLUDE = -I../Google_src/build -I../Google_src/src
+GPERF_LIB = -L../Google_src/build -ltcmalloc_minimal -Wl,-rpath,../Google_src/build
 SRCDIR = ../src
 TC_SRCS = $(SRCDIR)/ThreadCache.cpp $(SRCDIR)/CentralCache.cpp $(SRCDIR)/PageCache.cpp
 
