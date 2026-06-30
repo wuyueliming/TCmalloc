@@ -8,10 +8,10 @@
 #include <thread>
 #include <atomic>
 #include "base/Lock.h"
-static const size_t MAX_BYTES = 256 * 1024;
-static const size_t NLISTS = 208;
-static const size_t NPAGES = 129;
-static const size_t PAGE_SHIFT = 12;
+inline constexpr size_t MAX_BYTES = 256 * 1024;
+inline constexpr size_t NLISTS = 208;
+inline constexpr size_t NPAGES = 129;
+inline constexpr size_t PAGE_SHIFT = 12;
 namespace CMP
 {
     //#ifdef _WIN64
@@ -61,30 +61,6 @@ namespace CMP
         munmap(ptr, bytes);
         #endif
     }
-    //	//系统调用分配内存
-    //	inline static void* SystemAlloc(size_t kpage)
-    //	{
-        //#ifdef _WIN32
-        //		void* ptr = VirtualAlloc(0, kpage << PAGE_SHIFT, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        //#else
-        //		// linux下brk mmap等
-        //#endif
-        //
-        //		if (ptr == nullptr)
-        //			throw std::bad_alloc();
-        //
-        //		return ptr;
-        //	}
-        //
-        //	//系统调用释放内存
-        //	inline static void SystemFree(void* ptr)
-        //	{
-            //#ifdef _WIN32
-            //		VirtualFree(ptr, 0, MEM_RELEASE);
-            //#else
-            //		// sbrk unmmap等
-            //#endif
-            //	}
             class SizeClass {
                 public:
                 // 整体控制在最多10%左右的内碎片浪费
@@ -199,7 +175,7 @@ namespace CMP
                     assert(_Head != nullptr);
                     start = _Head;
                     end = _Head;
-                    int i = 0;
+                    size_t i = 0;
                     for (i = 0; i < num - 1 && nextptr(end) != nullptr; i++) {
                         end = nextptr(end);
                     }
@@ -244,7 +220,7 @@ namespace CMP
             class SpanList {
                 public:
                 SpanList() {
-                    _Head = new Span;
+                    _Head = new Span;  // 哨兵节点，不参与回收，直接 new 而非 ObjectPool
                     _Head->_next = _Head;
                     _Head->_prev = _Head;
                 }

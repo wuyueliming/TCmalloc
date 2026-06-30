@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include"../common.h"
 #include<cstring>
 #include"ObjectPool.h"
@@ -147,6 +147,7 @@ namespace CMP
                 return reinterpret_cast<Leaf*>(root_->ptrs[i1]->ptrs[i2])->values[i3];
             }
             void set(Number k, void* v) {
+                assert(root_ != nullptr);
                 assert(k >> BITS == 0);
                 const Number i1 = k >> (LEAF_BITS + INTERIOR_BITS);
                 const Number i2 = (k >> LEAF_BITS) & (INTERIOR_LENGTH - 1);

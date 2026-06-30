@@ -4,7 +4,6 @@
 #include"common.h"
 #include"ThreadCache.h"
 #include"CentralCache.h"
-#include"PageCache.h"
 namespace CMP
 {
     class TCMemAllocator {
@@ -33,8 +32,12 @@ namespace CMP
         }
         static void Free(void* ptr, size_t size) {
             if (size <= MAX_BYTES) {
-                assert(pTLSThreadCache != nullptr);
-                pTLSThreadCache->Deallocate(ptr, size);
+                if (pTLSThreadCache != nullptr) {
+                    pTLSThreadCache->Deallocate(ptr, size);
+                } else {
+                    // 跨线程释放：直接归还 CentralCache
+                    CentralCache::GetInstance()->Deallocate(ptr, size, 1);
+                }
             }
             else {
                 Span* pSpan = PageCache::GetInstance()->IdmapToSpan((PAGE_ID)ptr >> PAGE_SHIFT);
@@ -51,7 +54,16 @@ namespace CMP
                 //ptr只能从分配内存的起始地址开始释放，防止freelist中插入错误的地址再次分配时出问题
                 size_t offset = (char*)ptr - (char*)(retSpan->_pageId << PAGE_SHIFT);
                 assert(offset % size == 0);
-                pTLSThreadCache->Deallocate(ptr, size);
+                if (offset % size != 0) {
+                    // 非起始地址释放，拒绝处理
+                    return;
+                }
+                if (pTLSThreadCache != nullptr) {
+                    pTLSThreadCache->Deallocate(ptr, size);
+                } else {
+                    // 跨线程释放：直接归还 CentralCache
+                    CentralCache::GetInstance()->Deallocate(ptr, size, 1);
+                }
             }
             else {
                 PageCache::GetInstance()->Deallocate(retSpan);

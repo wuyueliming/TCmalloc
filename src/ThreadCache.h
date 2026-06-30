@@ -2,7 +2,7 @@
 #include"common.h"
 namespace CMP
 {
-    class alignas(64) ThreadCache {
+    class alignas(64) ThreadCache {  // 对齐对象起始到 cache line，减少 false sharing
         public:
         ThreadCache() = default;
         //ThreadCache分配内存

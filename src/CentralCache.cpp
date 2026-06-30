@@ -1,5 +1,6 @@
 #include"CentralCache.h"
 #include"PageCache.h"
+#include<vector>
 namespace CMP
 {
     size_t CentralCache::Allocate(void*& start, void*& end, size_t need, size_t size) {
@@ -50,15 +51,23 @@ namespace CMP
         }
         _SpanLists[index].GetMutex().lock();
         _SpanLists[index].pushBack(newSpan);
-        return getOneSpan(index, size);
+        // 重新加锁后再次检查是否有可用 Span（可能其他线程已申请）
+        pSpan = _SpanLists[index].Begin();
+        while (pSpan != _SpanLists[index].End()) {
+            if (pSpan->_freeList != nullptr) {
+                return pSpan;
+            }
+            pSpan = pSpan->_next;
+        }
+        return newSpan;  // 理论上 newSpan 有 freeList
     }
     void CentralCache::Deallocate(void* freelist, size_t size, size_t cnt) {
         RecycleListToSpans(freelist, size, cnt);
     }
     void CentralCache::RecycleListToSpans(void* freelist,size_t size,size_t num) {
         size_t index = SizeClass::Index(size);
-        Span* spans_to_delete[64];  // 收集需要归还 PageCache 的 Span
-        size_t delete_count = 0;
+        std::vector<Span*> spans_to_delete;  // 收集需要归还 PageCache 的 Span
+        spans_to_delete.reserve(8);
 
         _SpanLists[index].GetMutex().lock();
         void* next=nullptr;
@@ -75,16 +84,14 @@ namespace CMP
             //当前span的内存全部回收了，将span收集起来，稍后在锁外归还PageCache
             if (pSpan->_useCount == 0) {
                 _SpanLists[index].Erase(pSpan);
-                if (delete_count < 64) {
-                    spans_to_delete[delete_count++] = pSpan;
-                }
+                spans_to_delete.push_back(pSpan);
             }
         }
         _SpanLists[index].GetMutex().unlock();
 
         // 在 CentralCache 锁外释放 Span，避免锁嵌套
-        for (size_t i = 0; i < delete_count; i++) {
-            PageCache::GetInstance()->Deallocate(spans_to_delete[i]);
+        for (auto* span : spans_to_delete) {
+            PageCache::GetInstance()->Deallocate(span);
         }
     }
     CentralCache CentralCache::_Instance;

@@ -118,13 +118,6 @@ namespace CMP
         _SpanList[pSpan->_n].pushFront(pSpan);
     }
     Span* PageCache::IdmapToSpan(PAGE_ID id) {
-        /*auto ret = _IdSpanMap.find(id);
-        if (ret == _IdSpanMap.end()) {
-            return nullptr;
-        }
-        else {
-            return ret->second;
-        }*/
         return (Span*)_IdSpanMap.get(id);
     }
     Span* PageCache::BuildIdMapAll(Span* pSpan) {

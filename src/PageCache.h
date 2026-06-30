@@ -7,9 +7,6 @@ namespace CMP
     class PageCache {
         public:
         static PageCache _instance;
-        public:
-        PageCache(){}
-        PageCache(const PageCache&) = delete;
         static PageCache* GetInstance() {
             return &_instance;
         }
@@ -24,6 +21,8 @@ namespace CMP
             return _mutex;
         }
         private:
+        PageCache(){}
+        PageCache(const PageCache&) = delete;
         Span* NewSpan(size_t kpage);
         Span* SplitKSpan(size_t i, size_t kpage);
         void MergeFreeSpan(Span* pSpan);
@@ -34,18 +33,10 @@ namespace CMP
         private:
         SpanList _SpanList[NPAGES];
         Lock _mutex;
-        //std::unordered_map<PAGE_ID, Span*> _IdSpanMap; //页号到span的映射，需要注意保护map的线程安全
-        //#ifdef _WIN64
-        //		TCMalloc_PageMap3<64 - PAGE_SHIFT> _IdSpanMap;
-        //#elif _WIN32
-        //		TCMalloc_PageMap3<32 - PAGE_SHIFT> _IdSpanMap;
-        //#else
-        //		// linux
-        //#endif
         #if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
         TCMalloc_PageMap3<64 - PAGE_SHIFT> _IdSpanMap;
         #else
-        CMalloc_PageMap3<32 - PAGE_SHIFT> _IdSpanMap;
+        TCMalloc_PageMap3<32 - PAGE_SHIFT> _IdSpanMap;
         #endif
         ObjectPool<Span> _SpanPool;
     };
